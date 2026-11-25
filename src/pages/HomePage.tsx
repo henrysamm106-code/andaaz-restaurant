@@ -250,13 +250,13 @@ export function HomePage() {
             <motion.div {...SECTION_REVEAL} className="lg:col-span-5 space-y-6">
               <div className="space-y-3">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#7E4D54] font-medium">
-                  The Kitchen
+                  The Kitchen · Fort Road, Lahore
                 </p>
                 <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium leading-[1.08] text-[#172332] text-balance">
-                  Six courses from our Pakistani kitchen.
+                  Fort Road, Lahore — Six courses from our kitchen.
                 </h2>
                 <p className="text-sm sm:text-base text-[#4F5D6A] leading-relaxed">
-                  Prepared to order across Tandoori Namonay, Karahi Kay Kamal, traditional accompaniments, sweets, and house teas. Explore every dish or inspect the original printed menu pages below.
+                  Prepared to order at our sole Fort Road heritage house opposite Badshahi Masjid across Tandoori Namonay, Karahi Kay Kamal, accompaniments, sweets, and house teas.
                 </p>
               </div>
 
@@ -264,7 +264,7 @@ export function HomePage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.16em] text-[#AA7C7E]">
-                      Original Printed Menu
+                      Original Printed Menu · Fort Road, Lahore
                     </p>
                     <h3 className="font-serif text-2xl font-medium mt-1">
                       Inspect the Three Sheets

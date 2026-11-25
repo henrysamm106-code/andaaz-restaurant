@@ -14,9 +14,11 @@ import {
   MENU_META,
   OFFICIAL_MENU_PAGES,
 } from '../data/menu';
-import { RESTAURANT } from '../data/restaurant';
+import { OFFICIAL_BRANCHES, RESTAURANT } from '../data/restaurant';
 import { PAGE_TRANSITION } from '../lib/motion';
 import { MenuPageLightbox } from '../components/MenuPageLightbox';
+import { Picture } from '../components/Picture';
+import { GALLERY_SCENES } from '../data/assets';
 
 export function MenuPage() {
   const [selectedSectionId, setSelectedSectionId] = useState<string>('all');
@@ -55,13 +57,13 @@ export function MenuPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
           <div className="lg:col-span-7 space-y-4">
             <p className="text-xs uppercase tracking-[0.16em] text-[#7E4D54] font-medium">
-              Pakistani · Lahori · South Asian
+              Fort Road, Walled City of Lahore · Sole Flagship House
             </p>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-medium leading-[1.05] text-[#172332]">
-              The Andaaz Menu
+              Andaaz Menu — Fort Road, Lahore
             </h1>
             <p className="text-base text-[#4F5D6A] leading-relaxed max-w-2xl">
-              {MENU_META.scopeNote}
+              {MENU_META.scopeNote} {RESTAURANT.singleLocationNote}
             </p>
           </div>
 
@@ -114,14 +116,14 @@ export function MenuPage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div>
               <p className="text-xs uppercase tracking-[0.16em] text-[#7E4D54] font-medium">
-                Original Menu Pages
+                Original Menu Photos · Fort Road, Lahore
               </p>
               <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[#172332] mt-1">
-                From the printed dining room sheets.
+                Printed Menu Sheets — Fort Road, Lahore House
               </h2>
             </div>
             <p className="text-xs sm:text-sm text-[#4F5D6A]">
-              Select any page below to enlarge and read the original artwork.
+              Select any sheet below to enlarge and read the original printed artwork.
             </p>
           </div>
 
@@ -269,7 +271,7 @@ export function MenuPage() {
                   <div className="bg-[#F2EDE3]/75 border-b border-[#172332]/10 px-6 sm:px-8 py-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.16em] text-[#7E4D54] font-medium tabular-nums">
-                        Sheet 0{section.pageNumber} · {section.englishLabel}
+                        Fort Road, Lahore · Sheet 0{section.pageNumber} · {section.englishLabel}
                       </p>
                       <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#172332] mt-1">
                         {section.name}
@@ -326,11 +328,67 @@ export function MenuPage() {
             </div>
           )}
 
+          {/* Verified Location & Dining Spaces Photos */}
+          <div className="rounded-2xl bg-[#F2EDE3]/70 border border-[#172332]/12 p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.16em] text-[#7E4D54] font-medium">
+                  Location Photography · Single Heritage House
+                </p>
+                <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[#172332] mt-1">
+                  {OFFICIAL_BRANCHES[0].name}
+                </h2>
+                <p className="text-sm text-[#4F5D6A] mt-1 max-w-2xl">
+                  {OFFICIAL_BRANCHES[0].address} ({OFFICIAL_BRANCHES[0].landmark}) · Tel &amp; WhatsApp:{' '}
+                  <a
+                    href={`tel:${OFFICIAL_BRANCHES[0].phoneE164}`}
+                    className="font-medium text-[#7E4D54] hover:underline"
+                  >
+                    {OFFICIAL_BRANCHES[0].phoneDisplay}
+                  </a>
+                </p>
+              </div>
+              <Link
+                to="/gallery"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#7E4D54] hover:underline underline-offset-4 shrink-0"
+              >
+                View All {GALLERY_SCENES.length} Fort Road Photos <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {OFFICIAL_BRANCHES[0].photoIds.map((assetId) => {
+                const scene = GALLERY_SCENES.find((s) => s.landscapeId === assetId);
+                return (
+                  <Link
+                    key={assetId}
+                    to="/gallery"
+                    className="group rounded-xl overflow-hidden border border-[#172332]/10 bg-[#FAF8F3] transition-transform hover:-translate-y-0.5"
+                  >
+                    <Picture
+                      assetId={assetId}
+                      aspectClassName="aspect-[4/3]"
+                      imgClassName="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                    />
+                    <div className="p-3">
+                      <p className="text-[11px] uppercase tracking-wider text-[#7E4D54]">
+                        {scene?.category ?? 'Fort Road, Lahore'}
+                      </p>
+                      <p className="font-serif text-base font-medium text-[#172332] mt-0.5 line-clamp-1">
+                        {scene?.title ?? 'Fort Road Dining Space'}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Grounded Footer Disclaimer & Reservation CTA */}
           <div className="rounded-2xl bg-[#172332] text-[#FAF8F3] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
               <p className="text-xs uppercase tracking-[0.16em] text-[#AA7C7E]">
-                Pricing & Dietary Guidance
+                Pricing &amp; Dietary Guidance · Fort Road, Lahore
               </p>
               <p className="text-sm text-[#FAF8F3]/85 leading-relaxed">
                 {MENU_META.priceNote} Reach the restaurant team directly at{' '}

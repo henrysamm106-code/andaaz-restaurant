@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type, type Content, type FunctionDeclaration } from '@google/genai';
+import { registerManagementApiRoutes } from './server/apiRoutes.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -169,6 +170,11 @@ function validateAndSanitizeDraftPatch(rawArgs: Record<string, unknown>, current
     }
   }
 
+  if (typeof rawArgs.guestCity === 'string') {
+    const city = rawArgs.guestCity.trim().slice(0, 80);
+    if (city) patch.guestCity = city;
+  }
+
   if (rawArgs.seating !== undefined) {
     if (rawArgs.seating === 'rooftop' || rawArgs.seating === 'indoor' || rawArgs.seating === 'no-preference') {
       patch.seating = rawArgs.seating;
@@ -270,6 +276,10 @@ const updateReservationDraftTool: FunctionDeclaration = {
       guests: {
         type: Type.INTEGER,
         description: 'Positive integer guest count.',
+      },
+      guestCity: {
+        type: Type.STRING,
+        description: 'Optional city the guest is enquiring from (all enquiries route to Fort Road, Lahore).',
       },
       seating: {
         type: Type.STRING,
@@ -575,6 +585,9 @@ async function startServer() {
       res.end();
     }
   });
+
+  // Register reservation management, n8n webhooks, demo chat proxy, and admin APIs
+  registerManagementApiRoutes(app);
 
   // Serve public assets directly before Vite/SPA fallback
   app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));

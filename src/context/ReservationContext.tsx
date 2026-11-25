@@ -12,6 +12,13 @@ interface ReservationContextValue {
   updateDraft: (patch: Partial<ReservationDraft>) => void;
   resetDraft: () => void;
   hasMeaningfulInput: boolean;
+  draftEventKey: string;
+  lastSubmittedRef: string | null;
+  setLastSubmittedRef: (ref: string | null) => void;
+}
+
+function generateDraftEventKey(): string {
+  return `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function createInitialDraft(): ReservationDraft {
@@ -21,6 +28,7 @@ function createInitialDraft(): ReservationDraft {
     date: getKarachiTomorrow(),
     time: '20:00',
     guests: 2,
+    guestCity: 'Lahore',
     seating: 'no-preference',
     notes: '',
     name: '',
@@ -35,6 +43,8 @@ export function ReservationProvider({ children }: { children: React.ReactNode })
   // Draft lives strictly in memory; never persisted to localStorage or analytics.
   const [draft, setDraft] = useState<ReservationDraft>(createInitialDraft);
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [draftEventKey, setDraftEventKey] = useState<string>(generateDraftEventKey);
+  const [lastSubmittedRef, setLastSubmittedRef] = useState<string | null>(null);
 
   const updateDraft = useCallback((patch: Partial<ReservationDraft>) => {
     setDraft((prev) => {
@@ -59,6 +69,8 @@ export function ReservationProvider({ children }: { children: React.ReactNode })
 
   const resetDraft = useCallback(() => {
     setDraft(createInitialDraft());
+    setDraftEventKey(generateDraftEventKey());
+    setLastSubmittedRef(null);
     setCurrentStep(1);
   }, []);
 
@@ -92,6 +104,9 @@ export function ReservationProvider({ children }: { children: React.ReactNode })
         updateDraft,
         resetDraft,
         hasMeaningfulInput,
+        draftEventKey,
+        lastSubmittedRef,
+        setLastSubmittedRef,
       }}
     >
       {children}

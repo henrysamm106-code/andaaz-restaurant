@@ -25,6 +25,8 @@ export const RESTAURANT = {
     maxGuestsAdvertised: 200,
     qualification: 'Across floors and dining spaces; event-specific capacity and availability require staff confirmation.',
   },
+  singleLocationNote:
+    'Andaaz Restaurant (andaazrestaurant.com) operates one heritage flagship house on Fort Road, Walled City of Lahore. It does not operate branches in Gulberg, DHA, Karachi, or Islamabad.',
   notVerified: [
     'Weekly opening and closing schedule',
     'Current table inventory',
@@ -37,6 +39,50 @@ export const RESTAURANT = {
     'Awards and review scores',
   ],
 } as const;
+
+export interface RestaurantBranch {
+  id: string;
+  name: string;
+  city: string;
+  address: string;
+  landmark: string;
+  phoneDisplay: string;
+  phoneE164: string;
+  whatsappDigits: string;
+  menuLabel: string;
+  spacesNote: string;
+  photoIds: string[];
+}
+
+export const OFFICIAL_BRANCHES: RestaurantBranch[] = [
+  {
+    id: 'fort-road-lahore',
+    name: 'Fort Road, Walled City of Lahore (Sole Flagship House)',
+    city: 'Lahore',
+    address: '2189 A Fort Road, Shahi Mohallah, Walled City of Lahore, Lahore, Punjab 54000, Pakistan',
+    landmark: 'Opposite Badshahi Masjid',
+    phoneDisplay: '+92 300 0263229',
+    phoneE164: '+923000263229',
+    whatsappDigits: '923000263229',
+    menuLabel: 'Fort Road, Lahore — Full 3-Page House Menu',
+    spacesNote: 'Four floors featuring open-air rooftop terraces and glass-sided indoor dining salons.',
+    photoIds: [
+      'rooftop-table-landscape',
+      'dining-room-landscape',
+      'mosque-night-landscape',
+      'private-dining-room',
+    ],
+  },
+];
+
+export const BOOKING_CITY_OPTIONS = [
+  'Lahore',
+  'Islamabad / Rawalpindi',
+  'Karachi',
+  'Multan',
+  'Faisalabad',
+  'Visiting from Abroad',
+] as const;
 
 export const FAQ_ITEMS = [
   {
@@ -101,5 +147,45 @@ export const ROUTE_META: Record<string, RouteMeta> = {
     title: 'Contact & Directions — Andaaz Restaurant, Fort Road, Lahore',
     description:
       'Visit Andaaz Restaurant at 2189 A Fort Road, Shahi Mohallah, opposite Badshahi Masjid, Lahore. Telephone and WhatsApp: +92 300 0263229.',
+  },
+  '/staff-demo': {
+    title: 'Operations Overview — Andaaz Management Demo',
+    description: 'Reservation operations overview and AI Concierge monitoring for Andaaz Restaurant.',
+  },
+  '/staff-demo/reservations': {
+    title: 'Reservations — Andaaz Management Demo',
+    description: 'Manage reservation requests, pending approvals, seating preferences, and guest notes.',
+  },
+  '/staff-demo/calendar': {
+    title: 'Reservation Calendar — Andaaz Management Demo',
+    description: 'Daily, weekly, and monthly Fort Road reservation schedule and slot inspection.',
+  },
+  '/staff-demo/ai-concierge': {
+    title: 'AI Concierge — Andaaz Management Demo',
+    description: 'Monitor WhatsApp AI and Web AI Concierge conversations and handover flags.',
+  },
+  '/staff-demo/customers': {
+    title: 'Customers — Andaaz Management Demo',
+    description: 'Deduplicated guest directory, visit counts, occasions, and hospitality notes.',
+  },
+  '/staff-demo/notifications': {
+    title: 'Notifications — Andaaz Management Demo',
+    description: 'Real-time reservation requests, approvals, and integration status alerts.',
+  },
+  '/staff-demo/analytics': {
+    title: 'Analytics & Reports — Andaaz Management Demo',
+    description: 'Booking channel attribution, AI conversion tracking, and CSV reservation exports.',
+  },
+  '/staff-demo/availability': {
+    title: 'Availability Settings — Andaaz Management Demo',
+    description: 'Configure advisory dining slots, capacities, closures, and approval rules.',
+  },
+  '/staff-demo/settings': {
+    title: 'Automation Settings — Andaaz Management Demo',
+    description: 'Inspect n8n webhooks, Supabase persistence status, and endpoint integration contracts.',
+  },
+  '/automation-demo': {
+    title: 'Client Automation Demo Centre — Andaaz Restaurant',
+    description: 'Interactive demonstration of the n8n WhatsApp AI Reservation Agent for Andaaz Restaurant.',
   },
 };

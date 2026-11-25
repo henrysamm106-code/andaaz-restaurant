@@ -365,7 +365,21 @@ export function Layout({
               <p>
                 Andaaz Restaurant · Fort Road, Lahore · Dinner by reservation request, subject to restaurant confirmation.
               </p>
-              <p>Redesign preview concept using verified restaurant identity and photography.</p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <span>Redesign preview concept using verified restaurant identity and photography.</span>
+                <Link
+                  to="/staff-demo"
+                  className="text-[#FAF8F3]/75 hover:text-[#FAF8F3] underline underline-offset-4"
+                >
+                  Management Demo
+                </Link>
+                <Link
+                  to="/automation-demo"
+                  className="text-[#FAF8F3]/75 hover:text-[#FAF8F3] underline underline-offset-4"
+                >
+                  Automation Demo
+                </Link>
+              </div>
             </div>
           </div>
         </footer>

@@ -36,6 +36,7 @@ export interface ReservationDraft {
   date: string; // YYYY-MM-DD in Asia/Karachi
   time: string; // e.g. '20:00' for dinner, or custom session string for brunch/events
   guests: number;
+  guestCity: string; // City from which the guest is making the enquiry
   seating: SeatingPreference;
   notes: string;
   name: string;
@@ -161,9 +162,15 @@ export function buildWhatsAppRequestMessage(draft: ReservationDraft): string {
     'Assalam-o-Alaikum Andaaz Restaurant team,',
     '',
     'I would like to submit a reservation REQUEST with the following details:',
-    `- Name: ${draft.name.trim()}`,
-    `- Contact Number: ${draft.phone.trim()}`,
+    `- Branch: ${RESTAURANT.branch} (${RESTAURANT.phoneDisplay})`,
   ];
+
+  if (draft.guestCity.trim()) {
+    lines.push(`- Booking From City: ${draft.guestCity.trim()}`);
+  }
+
+  lines.push(`- Name: ${draft.name.trim()}`);
+  lines.push(`- Contact Number: ${draft.phone.trim()}`);
 
   if (draft.email.trim()) {
     lines.push(`- Email: ${draft.email.trim()}`);

@@ -9,6 +9,7 @@ import {
   Phone,
   AlertCircle,
   Edit3,
+  MapPin,
 } from 'lucide-react';
 import { useReservationDraft } from '../context/ReservationContext';
 import {
@@ -27,7 +28,7 @@ import {
   validatePhoneNumber,
 } from '../lib/karachiTime';
 import { EXPERIENCES, type ExperienceSlug } from '../data/experiences';
-import { RESTAURANT } from '../data/restaurant';
+import { BOOKING_CITY_OPTIONS, OFFICIAL_BRANCHES, RESTAURANT } from '../data/restaurant';
 import { EASE_OUT, PAGE_TRANSITION } from '../lib/motion';
 
 const STEPS = [
@@ -38,13 +39,23 @@ const STEPS = [
 ];
 
 export function ReservationsPage() {
-  const { draft, updateDraft, currentStep, setCurrentStep, resetDraft } = useReservationDraft();
+  const {
+    draft,
+    updateDraft,
+    currentStep,
+    setCurrentStep,
+    resetDraft,
+    draftEventKey,
+    lastSubmittedRef,
+    setLastSubmittedRef,
+  } = useReservationDraft();
   const [stepError, setStepError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [whatsappOpened, setWhatsappOpened] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
   const [copiedOfficial, setCopiedOfficial] = useState(false);
   const [guestInput, setGuestInput] = useState<string>(String(draft.guests));
+  const [submittingRequest, setSubmittingRequest] = useState(false);
 
   const stepHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const minDate = getKarachiToday();
@@ -119,13 +130,56 @@ export function ReservationsPage() {
     return true;
   };
 
-  const handleNext = () => {
+  const persistPendingRequest = async () => {
+    setSubmittingRequest(true);
+    try {
+      const occasionLabel =
+        draft.mode === 'occasion'
+          ? draft.occasionType
+            ? OCCASION_LABELS[draft.occasionType]
+            : 'Private / Hosted Occasion'
+          : '';
+      const res = await fetch('/api/public/reservations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          external_event_id: draftEventKey,
+          customer_name: draft.name.trim(),
+          customer_phone: draft.phone.trim(),
+          customer_email: draft.email.trim(),
+          guest_city: draft.guestCity.trim() || 'Lahore',
+          reservation_date: draft.date,
+          reservation_time: draft.time,
+          guest_count: draft.guests,
+          seating_preference: draft.seating,
+          special_occasion: occasionLabel,
+          special_requests: draft.notes.trim(),
+          source: 'website',
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.ok && json.bookingReference) {
+        setLastSubmittedRef(json.bookingReference);
+      }
+    } catch {
+      // Do not block WhatsApp handoff if backend persistence fails transiently
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
+  const handleNext = async () => {
     if (currentStep === 1 && !validateStep1()) return;
-    if (currentStep === 3 && !validateStep3()) return;
+    if (currentStep === 3) {
+      if (!validateStep3()) return;
+      await persistPendingRequest();
+      goToStep(4);
+      return;
+    }
     if (currentStep < 4) goToStep(currentStep + 1);
   };
 
-  const handleStepClick = (num: number) => {
+  const handleStepClick = async (num: number) => {
     if (num < currentStep) {
       goToStep(num);
     } else if (num === 2 && validateStep1()) {
@@ -133,6 +187,7 @@ export function ReservationsPage() {
     } else if (num === 3 && validateStep1()) {
       goToStep(3);
     } else if (num === 4 && validateStep1() && validateStep3()) {
+      await persistPendingRequest();
       goToStep(4);
     }
   };
@@ -163,16 +218,49 @@ export function ReservationsPage() {
     <motion.div {...PAGE_TRANSITION} className="pb-24">
       {/* Header */}
       <section className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 pb-8">
-        <div className="max-w-3xl space-y-3">
-          <p className="text-xs uppercase tracking-[0.16em] text-[#7E4D54] font-medium">
-            Guided Reservation Request · Asia/Karachi Time
-          </p>
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-medium leading-[1.05] text-[#172332]">
-            Request a Table
-          </h1>
-          <p className="text-base text-[#4F5D6A] leading-relaxed">
-            Prepare your dinner or occasion enquiry below, review every detail, and hand off directly to Andaaz Restaurant on WhatsApp ({RESTAURANT.phoneDisplay}) or the official reservation page. All requests remain subject to restaurant confirmation.
-          </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-7 space-y-3">
+            <p className="text-xs uppercase tracking-[0.16em] text-[#7E4D54] font-medium">
+              Guided Reservation Request · Asia/Karachi Time
+            </p>
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-medium leading-[1.05] text-[#172332]">
+              Request a Table
+            </h1>
+            <p className="text-base text-[#4F5D6A] leading-relaxed">
+              Prepare your dinner or occasion enquiry below, review every detail, and hand off directly to Andaaz Restaurant on WhatsApp ({RESTAURANT.phoneDisplay}) or the official reservation page. All requests remain subject to restaurant confirmation.
+            </p>
+          </div>
+
+          <div className="lg:col-span-5 rounded-2xl bg-[#F2EDE3] border border-[#172332]/12 p-5 space-y-2.5">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[#7E4D54] font-medium">
+              Branch &amp; Official Contact Number
+            </p>
+            {OFFICIAL_BRANCHES.map((branch) => (
+              <div key={branch.id} className="space-y-1.5">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-serif text-xl font-medium text-[#172332] leading-snug">
+                    {branch.name}
+                  </p>
+                </div>
+                <p className="text-xs text-[#4F5D6A] leading-relaxed">
+                  {branch.address} · {branch.landmark}
+                </p>
+                <div className="pt-1 flex flex-wrap items-center gap-3">
+                  <a
+                    href={`tel:${branch.phoneE164}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[#7E4D54] hover:underline tabular-nums"
+                  >
+                    <Phone className="h-3.5 w-3.5" />
+                    {branch.phoneDisplay}
+                  </a>
+                  <span className="text-xs text-[#4F5D6A]">Telephone &amp; WhatsApp Desk</span>
+                </div>
+              </div>
+            ))}
+            <p className="pt-2 border-t border-[#172332]/10 text-[11px] text-[#4F5D6A] leading-relaxed">
+              {RESTAURANT.singleLocationNote}
+            </p>
+          </div>
         </div>
 
         {/* Progress Indicator */}
@@ -333,6 +421,56 @@ export function ReservationsPage() {
                         )}
                       </div>
                     )}
+
+                    {/* City & Assigned Branch */}
+                    <div className="rounded-xl bg-[#FAF8F3] border border-[#172332]/12 p-4 sm:p-5 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label
+                          htmlFor="res-guest-city"
+                          className="block text-sm font-medium text-[#172332]"
+                        >
+                          Which city are you enquiring from?
+                        </label>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#7E4D54]">
+                          <MapPin className="h-3.5 w-3.5" />
+                          Routed to: {RESTAURANT.branch}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {BOOKING_CITY_OPTIONS.map((cityOpt) => {
+                          const selected = draft.guestCity === cityOpt;
+                          return (
+                            <button
+                              key={cityOpt}
+                              type="button"
+                              onClick={() => updateDraft({ guestCity: cityOpt })}
+                              className={`rounded-lg border px-3 py-1.5 text-xs transition-colors min-h-[34px] ${
+                                selected
+                                  ? 'bg-[#172332] text-[#FAF8F3] border-[#172332]'
+                                  : 'bg-white text-[#4F5D6A] border-[#172332]/15 hover:text-[#172332]'
+                              }`}
+                            >
+                              {cityOpt}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <input
+                        id="res-guest-city"
+                        type="text"
+                        maxLength={80}
+                        value={draft.guestCity}
+                        onChange={(e) => updateDraft({ guestCity: e.target.value })}
+                        placeholder="Or type your city (e.g. Lahore, Islamabad, London)"
+                        className="w-full rounded-xl border border-[#172332]/20 bg-white px-4 py-2.5 text-sm text-[#172332] min-h-[42px]"
+                      />
+                      <p className="text-xs text-[#4F5D6A] leading-relaxed">
+                        All reservations from {draft.guestCity.trim() || 'any city'} are handled at our sole location on{' '}
+                        <span className="font-medium text-[#172332]">{RESTAURANT.branch}</span> ({RESTAURANT.phoneDisplay}).
+                      </p>
+                    </div>
 
                     {/* Date & Guest Count */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -669,10 +807,12 @@ export function ReservationsPage() {
                       </button>
                       <button
                         type="button"
+                        disabled={submittingRequest}
                         onClick={handleNext}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#7E4D54] hover:bg-[#693E45] text-[#FAF8F3] px-6 py-3 text-sm font-medium transition-colors min-h-[44px]"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#7E4D54] hover:bg-[#693E45] disabled:opacity-60 text-[#FAF8F3] px-6 py-3 text-sm font-medium transition-colors min-h-[44px]"
                       >
-                        Review Prepared Request <ArrowRight className="h-4 w-4" />
+                        {submittingRequest ? 'Recording Request…' : 'Review Prepared Request'}{' '}
+                        <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -693,6 +833,23 @@ export function ReservationsPage() {
                         Check your prepared message below. Opening WhatsApp lets you press Send directly inside WhatsApp; your table is only confirmed once the restaurant replies.
                       </p>
                     </div>
+
+                    {lastSubmittedRef && (
+                      <div
+                        role="status"
+                        className="rounded-xl bg-[#F2EDE3] border border-[#172332]/15 px-4 py-3 text-xs text-[#172332] space-y-1"
+                      >
+                        <p className="font-semibold">
+                          Request Logged (Status: Pending) · Reference{' '}
+                          <span className="font-mono tabular-nums text-[#7E4D54]">
+                            {lastSubmittedRef}
+                          </span>
+                        </p>
+                        <p className="text-[#4F5D6A]">
+                          Your enquiry is recorded for manager review. This reference does not guarantee seating until confirmed by the restaurant team.
+                        </p>
+                      </div>
+                    )}
 
                     {/* Message Preview */}
                     <div className="rounded-xl bg-[#FAF8F3] border border-[#172332]/15 p-4 sm:p-5 space-y-2">
@@ -808,6 +965,37 @@ export function ReservationsPage() {
 
               <dl className="space-y-3 text-sm">
                 <div className="flex items-start justify-between gap-4">
+                  <dt className="text-[#4F5D6A]">Branch</dt>
+                  <dd className="text-right font-medium text-[#172332]">
+                    {RESTAURANT.branch}
+                  </dd>
+                </div>
+
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="text-[#4F5D6A]">Branch Phone</dt>
+                  <dd className="text-right font-medium text-[#7E4D54] tabular-nums">
+                    <a href={`tel:${RESTAURANT.phoneE164}`} className="hover:underline">
+                      {RESTAURANT.phoneDisplay}
+                    </a>
+                  </dd>
+                </div>
+
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="text-[#4F5D6A]">Enquiring City</dt>
+                  <dd className="text-right font-medium text-[#172332]">
+                    {draft.guestCity.trim() || 'Not specified'}
+                    <button
+                      type="button"
+                      onClick={() => goToStep(1)}
+                      aria-label="Edit enquiry city"
+                      className="ml-2 text-[#7E4D54] hover:underline inline-flex items-center"
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                    </button>
+                  </dd>
+                </div>
+
+                <div className="flex items-start justify-between gap-4 pt-2 border-t border-[#172332]/10">
                   <dt className="text-[#4F5D6A]">Request Type</dt>
                   <dd className="text-right font-medium text-[#172332]">
                     {draft.mode === 'occasion' && draft.occasionType
